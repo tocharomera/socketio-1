@@ -6,10 +6,12 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "martin@muimota.net",
+  "license": "MIT",
   "dependencies": {
+    "consolidate": "^0.14.5",
     "express": "^4.15.2",
+    "mustache": "^2.3.0",
     "socket.io": "^1.7.3"
   }
 }
