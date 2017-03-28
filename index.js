@@ -3,7 +3,8 @@ var app  = express()
 var http = require('http').Server(app)
 var io   = require('socket.io')(http)
 
-var pixels
+var pixels = [0,1,0,1,0,1,1,1,1,1,0,1,1,0,1]
+
 //soket to panel and to mobile devices
 var panelsock  = io.of('/panel')
 var mobilesock = io.of('/mobile')
@@ -20,20 +21,20 @@ app.set('views', __dirname + '/views');
 app.use(express.static('public'))
 
 app.get('/panel', function (req, res) {
-  res.sendFile(__dirname + '/public/index.html')
+  res.sendFile(__dirname + '/public/panel.html')
 })
 
 
 app.get('/mobile/:id', function (req, res) {
   //render template
-  res.render('mobile',{id:req.params.id})
+  res.render('mobile',{id:req.params.id,festival:'ars electronica'})
 })
 
 /* panel connection */
 panelsock.on('connection',function(socket){
 
   console.log('a user connected to panel: '+socket.id)
-
+  socket.emit('pixels',pixels)
   socket.on('disconnect', function(){
     console.log('user disconnected from panel: '+socket.id)
   })
@@ -96,6 +97,15 @@ function connCount(){
   }
   panelsock.emit('connCount',connCount)
   console.log(connCount)
+}
+//convert str formed by 0 and 1 to bit aray 
+function str2arr(str){
+  var bits = []
+  for(var i=0;i<str.length;i++){
+    var bit = (str[i] == '0') ? 0 : 1
+    bits.push(bit)
+  }
+  return bits
 }
 
 http.listen(3000,function(){

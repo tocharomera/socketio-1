@@ -11,8 +11,7 @@ function init(){
     var cell = $('#c'+i)
     cells.push(cell)
   }
-  displayBits([0,1,0,1,0,1,1,1,1,1,0,1,1,0,1])
-
+  
   //display how many devices are associated to each pixel
   socket.on('connCount',function(connCount){
     for(var i=0;i<15;i++){
@@ -23,16 +22,20 @@ function init(){
       }
     }
   })
+  
+  socket.on('pixels',function(code){
+    displayBits(code)
+  })
 
   $('table.table td').click(function(){
     $(this).toggleClass('selected')
-    var code = updateCode()
+    var code = getUpdate()
     $('#code').text(code.join(''))
     socket.emit('pixels',code)
   })
 }
 //display the code of the character display
-function updateCode(){
+function getUpdate(){
   var code = []
   for(var i=0;i<cells.length;i++){
     var cell = cells[i]
@@ -58,15 +61,3 @@ function displayBits(bits){
   $('#code').text(code)
 }
 
-//
-function phoneHandler(event){
-  var bg
-  var connid = $(this).data('connid')
-  if($(this).hasClass('active')){
-    bg = 'black'
-  }else{
-    bg = 'white'
-  }
-  socket.emit('bg',{'bg':bg,'connid':connid})
-
-}
