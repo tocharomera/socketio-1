@@ -3,6 +3,7 @@ var app  = express()
 var http = require('http').Server(app)
 var io   = require('socket.io')(http)
 
+//
 var pixels = [0,1,0,1,0,1,1,1,1,1,0,1,1,0,1]
 
 //soket to panel and to mobile devices
@@ -26,15 +27,23 @@ app.get('/panel', function (req, res) {
 
 
 app.get('/mobile/:id', function (req, res) {
+  //if id is > 15 redirect 
+  //http://stackoverflow.com/a/11355430/2205297
+  if (!req.params.id || req.params.id > 15){ 
+    res.redirect('/mobile/15')
+  }
   //render template
-  res.render('mobile',{id:req.params.id,festival:'ars electronica'})
+  res.render('mobile',{id:req.params.id})
 })
 
 /* panel connection */
 panelsock.on('connection',function(socket){
 
   console.log('a user connected to panel: '+socket.id)
+  //send pixel data
   socket.emit('pixels',pixels)
+  //send connection data
+  connCount()
   socket.on('disconnect', function(){
     console.log('user disconnected from panel: '+socket.id)
   })
@@ -42,8 +51,9 @@ panelsock.on('connection',function(socket){
   socket.on('pixels',function(_pixels){
     pixels = _pixels
     console.log(pixels)
+    //update rest of panels
+    socket.broadcast.emit('pixels',pixels)
     for(var pixelid=0;pixelid<15;pixelid++){
-
       var room = mobilesock.adapter.rooms[pixelid]
       if(room){
         var color = pixels[pixelid] ? 'black' : 'white'
