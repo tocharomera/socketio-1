@@ -2,10 +2,12 @@ express  = require('express')
 var app  = express()
 var http = require('http').Server(app)
 var io   = require('socket.io')(http)
+var os   = require('os')
 
 //
 var pixels = [0,1,0,1,0,1,1,1,1,1,0,1,1,0,1]
 
+var port = 3000
 //soket to panel and to mobile devices
 var panelsock  = io.of('/panel')
 var mobilesock = io.of('/mobile')
@@ -22,15 +24,43 @@ app.set('views', __dirname + '/views');
 app.use(express.static('public'))
 
 app.get('/panel', function (req, res) {
-  res.sendFile(__dirname + '/public/panel.html')
+  //list interfaces
+  var ifaces = os.networkInterfaces();
+  var address = 'no address'
+  for(var ifname in ifaces){
+    iface = ifaces[ifname]
+    for(var i=0;i<iface.length;i++){
+      var ifaddr = iface[i]['address']
+      //filter ipv6 and localhost addresses
+      if( ifaddr.indexOf('.') != -1 && ifaddr.substr(0,3) != '127'){
+        address = ifaddr
+      }
+    }
+  }
+
+  res.render('panel',{address:address,port:port})
 })
 
+app.get('/', function (req, res) {
+  //if no mobile is specified connect to a empty pixel
+  for(var pixelid=0;pixelid<15;pixelid++){
+    var room = mobilesock.adapter.rooms[pixelid]
+    if(!room){
+        res.redirect('/mobile/'+pixelid)
+    }
+  }
+})
 
 app.get('/mobile/:id', function (req, res) {
-  //if id is > 15 redirect 
+  //if id is > 15 redirect
   //http://stackoverflow.com/a/11355430/2205297
-  if (!req.params.id || req.params.id > 15){ 
-    res.redirect('/mobile/15')
+  if (!req.params.id){
+    for(var pixelid=0;pixelid<15;pixelid++){
+      var room = mobilesock.adapter.rooms[pixelid]
+      if(!room){
+          res.redirect('/mobile/'+pixelid)
+      }
+    }
   }
   //render template
   res.render('mobile',{id:req.params.id})
@@ -108,7 +138,7 @@ function connCount(){
   panelsock.emit('connCount',connCount)
   console.log(connCount)
 }
-//convert str formed by 0 and 1 to bit aray 
+//convert str formed by 0 and 1 to bit aray
 function str2arr(str){
   var bits = []
   for(var i=0;i<str.length;i++){
@@ -118,6 +148,6 @@ function str2arr(str){
   return bits
 }
 
-http.listen(3000,function(){
-  console.log('listening on 3000')
+http.listen(port,function(){
+  console.log('listening on ' + port)
 })
