@@ -5,12 +5,31 @@ var io   = require('socket.io')(http)
 var os   = require('os')
 
 //
-var font = {'a':[0,1,0,1,0,1,1,1,1,1,0,1,1,0,1]}
-          
-var pixels = [0,1,0,1,0,1,1,1,1,1,0,1,1,0,1]
+var font = {
+  ' ':[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+  'a':[0,1,0,1,0,1,1,1,1,1,0,1,1,0,1],
+  'b':[1,1,0,1,0,1,1,1,1,1,0,1,1,1,0],
+  'c':[1,1,1,1,0,1,1,0,0,1,0,1,1,1,1],
+  'd':[1,1,0,1,0,1,1,0,1,1,0,1,1,1,0],
+  'e':[1,1,1,1,0,0,1,1,0,1,0,0,1,1,1],
+  'f':[1,1,1,1,0,0,1,1,0,1,0,0,1,0,0],
+  'g':[1,1,1,1,0,1,1,1,1,0,0,1,1,1,1],
+  'h':[1,0,1,1,0,1,1,1,1,1,0,1,1,0,1],
+  'i':[0,1,0,0,1,0,0,1,0,0,1,0,0,1,0],
+  'j':[0,0,1,0,0,1,0,0,1,1,0,1,0,1,0],
+  'l':[1,0,0,1,0,0,1,0,0,1,0,0,1,1,1],
+  'o':[1,1,1,1,0,1,1,0,1,1,0,1,1,1,1],
+  'p':[1,1,1,1,0,1,1,1,1,1,0,0,1,0,0],
+  'r':[1,1,0,1,0,1,1,1,0,1,0,1,1,0,1],
+  't':[1,1,1,0,1,0,0,1,0,0,1,0,0,1,0],
+  '!':[0,1,0,0,1,0,0,1,0,0,0,0,0,1,0]
+}
+
+var pixels = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+
 
 var port = 3000
-//soket to panel and to mobile devices
+//socket to panel and to mobile devices
 var panelsock  = io.of('/panel')
 var mobilesock = io.of('/mobile')
 
@@ -24,6 +43,13 @@ app.set('view engine', 'html');
 app.set('views', __dirname + '/views');
 //allow access to public folder
 app.use(express.static('public'))
+
+
+//endpoint for new message
+app.get('/msg/:msg',function(req,res){
+  displayMessage(req.params.msg)
+  res.send('ok');
+})
 
 app.get('/panel', function (req, res) {
   //list interfaces
@@ -85,14 +111,8 @@ panelsock.on('connection',function(socket){
     console.log(pixels)
     //update rest of panels
     socket.broadcast.emit('pixels',pixels)
-    for(var pixelid=0;pixelid<15;pixelid++){
-      var room = mobilesock.adapter.rooms[pixelid]
-      if(room){
-        var color = pixels[pixelid] ? 'black' : 'white'
-        console.log(color)
-        mobilesock.to(pixelid).emit('bg',color)
-      }
-    }
+    //update devices
+    devicesUpdate()
   })
 
 })
@@ -125,7 +145,7 @@ mobilesock.on('connection',function(socket){
 
 })
 
-//count connections and send to panels
+//counts connections for every pixel/room and sends it to panels
 function connCount(){
   var connCount = []
   for(var pixelid=0;pixelid<15;pixelid++){
@@ -140,6 +160,7 @@ function connCount(){
   panelsock.emit('connCount',connCount)
   console.log(connCount)
 }
+
 //convert str formed by 0 and 1 to bit aray
 function str2arr(str){
   var bits = []
@@ -149,6 +170,63 @@ function str2arr(str){
   }
   return bits
 }
+//displays letter in devices, is possible update pixels value
+function devicesUpdate(_pixels){
+
+  if(_pixels){
+      pixels = _pixels
+  }
+
+  for(var pixelid=0;pixelid<15;pixelid++){
+    var room = mobilesock.adapter.rooms[pixelid]
+    if(room){
+      var color = pixels[pixelid] ? 'black' : 'white'
+      console.log(color)
+      mobilesock.to(pixelid).emit('bg',color)
+    }
+  }
+}
+
+//global var hold timeoutHandler so it displayMessage can be cleared and stopped
+//if a new message arrives
+var displayHandler = null
+
+function displayMessage(msg, timeout){
+  var msgIndex = 0
+  if (!timeout){
+    timeout = 1000
+  }
+  clearTimeout(displayHandler)
+  //add a space at the end so screen clears
+
+  //displays next letter
+  function displayLetter(){
+
+    var letter = msg[msgIndex]
+    console.log(letter)
+    setChar(msg[msgIndex])
+    msgIndex ++
+    if(msgIndex < msg.length){
+      displayHandler = setTimeout(displayLetter,timeout)
+    }else{
+      displayHandler = null
+    }
+  }
+
+  displayLetter();
+
+}
+
+function setChar(char){
+  if (char in font){
+    pixels = font[char]
+  }else{
+    pixels = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+  }
+  devicesUpdate(pixels)
+  panelsock.emit('pixels',pixels)
+}
+
 
 http.listen(port,function(){
   console.log('listening on ' + port)

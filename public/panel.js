@@ -33,6 +33,12 @@ function init(){
     displayBits(code)
     socket.emit('pixels',code)
   })
+
+  //message forme
+  $('#msgsend').click(function(){
+    var msg = $('#msginput').val()
+    $.get('/msg/'+msg)
+  })
 }
 //display the code of the character display
 function getUpdate(){
