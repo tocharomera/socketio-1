@@ -5,6 +5,8 @@ var io   = require('socket.io')(http)
 var os   = require('os')
 
 //
+var font = {'a':[0,1,0,1,0,1,1,1,1,1,0,1,1,0,1]}
+          
 var pixels = [0,1,0,1,0,1,1,1,1,1,0,1,1,0,1]
 
 var port = 3000
