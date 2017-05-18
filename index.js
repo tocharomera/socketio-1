@@ -3,30 +3,44 @@ var app  = express()
 var http = require('http').Server(app)
 var io   = require('socket.io')(http)
 var os   = require('os')
-
+//osc client
+var osc = require('node-osc');
+//var client = new osc.Client('10.20.29.51', 4444);
+var client = new osc.Client('192.168.19.170', 4444);
 //
 var font = {
-  ' ':[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  'a':[0,1,0,1,0,1,1,1,1,1,0,1,1,0,1],
-  'b':[1,1,0,1,0,1,1,1,1,1,0,1,1,1,0],
-  'c':[1,1,1,1,0,1,1,0,0,1,0,1,1,1,1],
-  'd':[1,1,0,1,0,1,1,0,1,1,0,1,1,1,0],
-  'e':[1,1,1,1,0,0,1,1,0,1,0,0,1,1,1],
-  'f':[1,1,1,1,0,0,1,1,0,1,0,0,1,0,0],
-  'g':[1,1,1,1,0,1,1,1,1,0,0,1,1,1,1],
-  'h':[1,0,1,1,0,1,1,1,1,1,0,1,1,0,1],
-  'i':[0,1,0,0,1,0,0,1,0,0,1,0,0,1,0],
-  'j':[0,0,1,0,0,1,0,0,1,1,0,1,0,1,0],
-  'l':[1,0,0,1,0,0,1,0,0,1,0,0,1,1,1],
-  'o':[1,1,1,1,0,1,1,0,1,1,0,1,1,1,1],
-  'p':[1,1,1,1,0,1,1,1,1,1,0,0,1,0,0],
-  'r':[1,1,0,1,0,1,1,1,0,1,0,1,1,0,1],
-  't':[1,1,1,0,1,0,0,1,0,0,1,0,0,1,0],
-  '!':[0,1,0,0,1,0,0,1,0,0,0,0,0,1,0]
+  ' ':[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+  'a':[1,0,0,0,1,0,1,1,1,0,0,1,1,1,0,0,0,0,0,0,0,1,1,1,0,0,1,1,1,0,0,1,1,1,0],
+  'b':[0,0,0,0,1,0,1,1,1,0,0,1,1,1,0,0,0,0,0,0,0,1,1,1,0,0,1,1,1,0,0,0,0,0,1],
+  'c':[0,0,0,0,0,0,1,1,1,1,0,1,1,1,1,0,1,1,1,1,0,1,1,1,1,0,1,1,1,1,0,0,0,0,0],
+  'd':[0,0,0,0,1,0,1,1,1,0,0,1,1,1,0,0,1,1,1,0,0,1,1,1,0,0,1,1,1,0,0,0,0,0,1],
+  'e':[0,0,0,0,0,0,1,1,1,1,0,1,1,1,1,0,0,0,1,1,0,1,1,1,1,0,1,1,1,1,0,0,0,0,0],
+  'f':[0,0,0,0,0,0,1,1,1,1,0,1,1,1,1,0,0,0,1,1,0,1,1,1,1,0,1,1,1,1,0,1,1,1,1],
+  'g':[0,0,0,0,0,0,1,1,1,1,0,1,1,1,1,0,1,0,0,0,0,1,1,1,0,0,1,1,1,0,0,0,0,0,0],
+  'h':[0,1,1,1,0,0,1,1,1,0,0,1,1,1,0,0,0,0,0,0,0,1,1,1,0,0,1,1,1,0,0,1,1,1,0],
+  'i':[0,0,0,0,0,1,1,0,1,1,1,1,0,1,1,1,1,0,1,1,1,1,0,1,1,1,1,0,1,1,0,0,0,0,0],
+  'j':[0,0,0,0,0,1,1,1,0,1,1,1,1,0,1,0,0,1,0,1,0,1,1,0,1,0,1,1,0,1,0,0,0,0,1],
+  'k':[0,1,1,1,0,0,1,1,0,1,0,1,0,1,1,0,0,1,1,1,0,1,0,1,1,0,1,1,0,1,0,1,1,1,0],
+  'l':[0,1,1,1,1,0,1,1,1,1,0,1,1,1,1,0,1,1,1,1,0,1,1,1,1,0,1,1,1,1,0,0,0,0,0],
+  'm':[0,1,1,1,0,0,1,1,1,0,0,0,1,0,0,0,0,0,0,0,0,1,0,1,0,0,1,1,1,0,0,1,1,1,0],
+  'n':[0,1,1,1,0,0,0,1,1,0,0,0,1,1,0,0,0,0,1,0,0,1,0,0,0,0,1,1,0,0,0,1,1,1,0],
+  'o':[0,0,0,0,0,0,1,1,1,0,0,1,1,1,0,0,1,1,1,0,0,1,1,1,0,0,1,1,1,0,0,0,0,0,0],
+  'p':[0,0,0,0,0,0,1,1,1,0,0,1,1,1,0,0,0,0,0,0,0,1,1,1,1,0,1,1,1,1,0,1,1,1,1],
+  'r':[0,0,0,0,0,0,1,1,1,0,0,1,1,1,0,0,0,0,0,0,0,0,0,1,1,0,1,1,0,1,0,1,1,1,0],
+  's':[0,0,0,0,0,0,1,1,1,1,0,1,1,1,1,0,0,0,0,0,1,1,1,1,0,1,1,1,1,0,0,0,0,0,0],
+  't':[0,0,0,0,0,1,1,0,1,1,1,1,0,1,1,1,1,0,1,1,1,1,0,1,1,1,1,0,1,1,1,1,0,1,1],
+  'u':[0,1,1,1,0,0,1,1,1,0,0,1,1,1,0,0,1,1,1,0,0,1,1,1,0,0,1,1,1,0,0,0,0,0,0],
+  'x':[0,1,1,1,0,0,0,1,0,0,1,0,0,0,1,1,1,0,1,1,1,0,0,0,1,0,0,1,0,0,0,1,1,1,0],
+  'v':[0,1,1,1,0,0,1,1,1,0,0,0,1,0,0,1,0,1,0,1,1,0,0,0,1,1,0,0,0,1,1,1,0,1,1],
+  'w':[0,1,1,1,0,0,1,1,1,0,0,1,0,1,0,0,1,0,1,0,0,0,0,0,0,0,0,1,0,0,1,0,1,0,1],
+  'y':[0,1,1,1,0,0,0,1,0,0,1,0,0,0,0,1,1,0,0,1,1,1,0,1,1,1,0,0,1,1,0,0,1,1,1],
+  'z':[0,0,0,0,0,1,1,1,0,0,1,1,0,0,1,1,0,0,1,1,0,0,1,1,1,0,1,1,1,1,0,0,0,0,0],
+  '!':[1,0,0,0,1,1,1,0,1,1,1,1,0,1,1,1,1,0,1,1,1,0,0,1,1,1,1,1,1,1,1,1,0,1,1],
+  '?':[0,0,0,0,0,0,1,1,1,0,1,1,1,1,0,1,1,0,0,0,1,1,0,1,1,1,1,1,1,1,1,1,0,1,1]
 }
 
 var pixels = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-
+var address
 
 var port = 3000
 //socket to panel and to mobile devices
@@ -54,24 +68,27 @@ app.get('/msg/:msg',function(req,res){
 app.get('/panel', function (req, res) {
   //list interfaces
   var ifaces = os.networkInterfaces();
-  var address = 'no address'
+   address = 'no address'
   for(var ifname in ifaces){
     iface = ifaces[ifname]
     for(var i=0;i<iface.length;i++){
       var ifaddr = iface[i]['address']
+	  direcIp = iface[i]['address'];
       //filter ipv6 and localhost addresses
       if( ifaddr.indexOf('.') != -1 && ifaddr.substr(0,3) != '127'){
         address = ifaddr
+		
+		
       }
     }
   }
-
+	
   res.render('panel',{address:address,port:port})
 })
 
 app.get('/', function (req, res) {
   //if no mobile is specified connect to a empty pixel
-  for(var pixelid=0;pixelid<15;pixelid++){
+  for(var pixelid=0;pixelid<35;pixelid++){
     var room = mobilesock.adapter.rooms[pixelid]
     if(!room){
         res.redirect('/mobile/'+pixelid)
@@ -83,7 +100,7 @@ app.get('/mobile/:id', function (req, res) {
   //if id is > 15 redirect
   //http://stackoverflow.com/a/11355430/2205297
   if (!req.params.id){
-    for(var pixelid=0;pixelid<15;pixelid++){
+    for(var pixelid=0;pixelid<35;pixelid++){
       var room = mobilesock.adapter.rooms[pixelid]
       if(!room){
           res.redirect('/mobile/'+pixelid)
@@ -108,11 +125,11 @@ panelsock.on('connection',function(socket){
   //updates all bg of all the mobile devices
   socket.on('pixels',function(_pixels){
     pixels = _pixels
-    console.log(pixels)
+    //console.log(pixels)
     //update rest of panels
     socket.broadcast.emit('pixels',pixels)
     //update devices
-    devicesUpdate()
+   devicesUpdate()
   })
 
 })
@@ -131,12 +148,19 @@ mobilesock.on('connection',function(socket){
     connCount()
     //send the color of the pixel
     var color = pixels[pixelid] ? 'black' : 'white'
-    console.log(pixels)
-    console.log(pixels[pixelid])
-    console.log('>'+color)
-    socket.emit('bg',color)
+    //console.log(pixels)
+    //console.log(pixels[pixelid])
+    //console.log('>'+color)
+    socket.emit('c0', { hello: 'world' })
   })
-
+  socket.on('chat message', function(msg){
+	  
+	  io.emit('chat message', msg);
+	  
+    	var mensaj =  new osc.Message('/'+pixelid);
+		mensaj.append(msg);
+		client.send(mensaj);
+  });
   //send to all panel connections
   socket.on('disconnect', function(){
     console.log('mobile disconnect: '+socket.id)
@@ -148,7 +172,7 @@ mobilesock.on('connection',function(socket){
 //counts connections for every pixel/room and sends it to panels
 function connCount(){
   var connCount = []
-  for(var pixelid=0;pixelid<15;pixelid++){
+  for(var pixelid=0;pixelid<35;pixelid++){
     connCount.push(null)
     var room = mobilesock.adapter.rooms[pixelid]
     if(room){
@@ -158,7 +182,7 @@ function connCount(){
     }
   }
   panelsock.emit('connCount',connCount)
-  console.log(connCount)
+ // console.log(connCount)
 }
 
 //convert str formed by 0 and 1 to bit aray
@@ -177,7 +201,7 @@ function devicesUpdate(_pixels){
       pixels = _pixels
   }
 
-  for(var pixelid=0;pixelid<15;pixelid++){
+  for(var pixelid=0;pixelid<35;pixelid++){
     var room = mobilesock.adapter.rooms[pixelid]
     if(room){
       var color = pixels[pixelid] ? 'black' : 'white'
@@ -203,10 +227,20 @@ function displayMessage(msg, timeout){
   function displayLetter(){
 
     var letter = msg[msgIndex]
-    console.log(letter)
-    setChar(msg[msgIndex])
-    msgIndex ++
-    if(msgIndex < msg.length){
+    //console.log(letter)
+    for(var pixelid=0;pixelid<35;pixelid++){
+    var room = mobilesock.adapter.rooms[pixelid]
+    //console.log(pixelid)
+     if(room){
+      
+      setChar(msg[msgIndex], pixelid)
+      msgIndex++
+      console.log(pixelid)
+      }
+
+    }
+
+    if(msgIndex != -1){
       displayHandler = setTimeout(displayLetter,timeout)
     }else{
       displayHandler = null
@@ -217,14 +251,22 @@ function displayMessage(msg, timeout){
 
 }
 
-function setChar(char){
+function setChar(char, pixelid){
+
   if (char in font){
     pixels = font[char]
+
   }else{
-    pixels = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+    pixels = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
   }
-  devicesUpdate(pixels)
-  panelsock.emit('pixels',pixels)
+  //devicesUpdate(pixels)
+    
+    var room = mobilesock.adapter.rooms[pixelid]
+    if(room ){
+     mobilesock.to(pixelid).emit('pixels',pixels)
+    }
+  
+  //mobilesock.to(pixelid).emit('pixels',pixels)
 }
 
 

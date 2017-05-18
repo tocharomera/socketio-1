@@ -4,9 +4,26 @@ var socket
 var cells
 function init(){
   socket = io('/panel')
+  document.getElementById('request').addEventListener('click', () => {
+	if (screenfull.enabled) {
+		screenfull.request();
+	} else {	// Ignore or do something else
+	}
+  });
+  
+  $("#clear").click(function(){
+      var code = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+  
+  displayBits(code)
+      $('#code').text("[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]")
+  });
+
+  document.getElementById('exit').addEventListener('click', () => {
+	screenfull.exit();
+  });
 
   cells = []
-  for(var i=0;i<15;i++){
+  for(var i=0;i<35;i++){
     //select every cell
     var cell = $('#c'+i)
     cells.push(cell)
@@ -14,7 +31,7 @@ function init(){
 
   //display how many devices are associated to each pixel
   socket.on('connCount',function(connCount){
-    for(var i=0;i<15;i++){
+    for(var i=0;i<35;i++){
       if(connCount[i] > 0){
         cells[i].addClass('connected')
       }else{
@@ -23,10 +40,11 @@ function init(){
     }
   })
 
+    
   socket.on('pixels',function(code){
     displayBits(code)
   })
-
+   
   $('table.table td').click(function(){
     $(this).toggleClass('selected')
     var code = getUpdate()

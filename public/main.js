@@ -1,34 +1,18 @@
+
 $(document).ready(init)
-var cells
 var socket
+var cells
 function init(){
-	
- socket = io('/mobile')
+  socket = io('/panel')
 
-document.getElementById('request').addEventListener('click', () => {
-  if (screenfull.enabled) {
-    screenfull.request();
-  } 
-  });
-document.getElementById('exit').addEventListener('click', () => {
-  screenfull.exit();
-  });
-
-   cells = []
-  for(var i=0;i<35;i++){
+  cells = []
+  for(var i=0;i<15;i++){
     //select every cell
     var cell = $('#c'+i)
     cells.push(cell)
   }
   
- /*$('form').submit(function(){
-      socket.emit('chat message', $('#m').val());
-      $('#m').val('');
-      return false;
-    });*/
-    /*socket.on('chat message', function(msg){
-      $('#messages').append($('<li>').text(msg));
-    });*/
+  //display how many devices are associated to each pixel
   socket.on('connCount',function(connCount){
     for(var i=0;i<15;i++){
       if(connCount[i] > 0){
@@ -38,36 +22,28 @@ document.getElementById('exit').addEventListener('click', () => {
       }
     }
   })
-  socket.on('connect', function() {
-    socket.emit('pixel',pixelid)
-	
-  });
-  /*socket.on('bg', function(color) {
-    // Connected, let's sign-up for to receive messages for this room
-     $('body').css('background', color)
-  });*/
-
-
+  
   socket.on('pixels',function(code){
     displayBits(code)
   })
 
-/*$('table.table td').click(function(){
+  $('table.table td').click(function(){
     $(this).toggleClass('selected')
     var code = getUpdate()
-    //displayBits(code)
+    $('#code').text(code.join(''))
     socket.emit('pixels',code)
-  })*/
+  })
 }
+//display the code of the character display
 function getUpdate(){
-  var bits = []
+  var code = []
   for(var i=0;i<cells.length;i++){
     var cell = cells[i]
     var bit  = cell.hasClass('selected')
     //http://stackoverflow.com/questions/7820683/convert-boolean-result-into-number-integer#7820695
-    bits.push(bit + false)
+    code.push(bit + false)
   }
-  return bits
+  return code
 }
 
 function displayBits(bits){
@@ -80,7 +56,8 @@ function displayBits(bits){
     }else{
       cell.removeClass('selected')
     }
+    code += bit
   }
-  code = '['+bits.join(',')+']'
   $('#code').text(code)
 }
+
